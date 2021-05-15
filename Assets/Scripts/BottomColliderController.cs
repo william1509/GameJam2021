@@ -24,6 +24,7 @@ public class BottomColliderController : MonoBehaviour
     {
         Debug.Log("touching ground");
         transform.parent.SendMessage("SetJumpStatus", true);
+        transform.parent.SendMessage("ReactivateControls", true);
     }
     private void OnTriggerExit2D(Collider2D other)
     {

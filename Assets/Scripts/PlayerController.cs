@@ -16,11 +16,13 @@ struct WallJump
 public class PlayerController : MonoBehaviour
 {
     // Start is called before the first frame update
-
+    public GameManager gameManager;
     private Rigidbody2D rigidbody;
     private bool canJump = false;
     private WallJump wallJump;
     private bool canMove = true;
+
+    [SerializeField] float playerSpeed; 
 
     void Start()
     {
@@ -34,6 +36,7 @@ public class PlayerController : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.E))
         {
             Debug.Log("Changing worlds");
+            gameManager.ChangeWorlds();
         }
         if (Input.GetKeyDown(KeyCode.Space)) {
             if(canJump)
@@ -44,7 +47,6 @@ public class PlayerController : MonoBehaviour
                 rigidbody.velocity = new Vector2(0, 0);
                 rigidbody.AddForce(wallJump.jumpVector, ForceMode2D.Impulse);
                 canMove = false;
-                Invoke("ReactivateControls", 0.5f);
             }
             
         } 
@@ -52,11 +54,11 @@ public class PlayerController : MonoBehaviour
             return;
         }
         if(Input.GetKey(KeyCode.LeftArrow)) {
-            rigidbody.velocity = new Vector2(-2, rigidbody.velocity.y);
+            rigidbody.velocity = new Vector2(-1 * playerSpeed, rigidbody.velocity.y);
         }
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            rigidbody.velocity = new Vector2(2, rigidbody.velocity.y);
+            rigidbody.velocity = new Vector2(1 * playerSpeed, rigidbody.velocity.y);
         }
     }
 

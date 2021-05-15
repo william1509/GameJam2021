@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BottomCollider : MonoBehaviour
+public class BottomColliderController : MonoBehaviour
 {
     // Start is called before the first frame update
     void Start()
@@ -23,6 +23,12 @@ public class BottomCollider : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other)
     {
         Debug.Log("touching ground");
-        transform.parent.SendMessage("Testing");
+        transform.parent.SendMessage("SetJumpStatus", true);
     }
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        Debug.Log("leaving ground");
+        transform.parent.SendMessage("SetJumpStatus", false);
+    }
+
 }

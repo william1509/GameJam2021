@@ -17,16 +17,19 @@ public class PlayerController : MonoBehaviour
 {
     // Start is called before the first frame update
     public GameManager gameManager;
-    private Rigidbody2D rigidbody;
+    private Rigidbody2D playerRB;
     private bool canJump = false;
     private WallJump wallJump;
     private bool canMove = true;
 
-    [SerializeField] float playerSpeed; 
+    [SerializeField] float playerSpeed = 5f; 
+
+    private Vector2 startingPosition;
 
     void Start()
     {
-        rigidbody = GetComponent<Rigidbody2D>();
+        playerRB = GetComponent<Rigidbody2D>();
+        startingPosition = transform.position;
     }
 
     // Update is called once per frame
@@ -41,11 +44,11 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space)) {
             if(canJump)
             {
-                rigidbody.AddForce(new Vector2(0, 5), ForceMode2D.Impulse);
+                playerRB.AddForce(new Vector2(0, 5), ForceMode2D.Impulse);
             } else if(wallJump.stickingToWall)
             {
-                rigidbody.velocity = new Vector2(0, 0);
-                rigidbody.AddForce(wallJump.jumpVector, ForceMode2D.Impulse);
+                playerRB.velocity = new Vector2(0, 0);
+                playerRB.AddForce(wallJump.jumpVector, ForceMode2D.Impulse);
                 canMove = false;
             }
             
@@ -54,11 +57,11 @@ public class PlayerController : MonoBehaviour
             return;
         }
         if(Input.GetKey(KeyCode.LeftArrow)) {
-            rigidbody.velocity = new Vector2(-1 * playerSpeed, rigidbody.velocity.y);
+            playerRB.velocity = new Vector2(-1 * playerSpeed, playerRB.velocity.y);
         }
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            rigidbody.velocity = new Vector2(1 * playerSpeed, rigidbody.velocity.y);
+            playerRB.velocity = new Vector2(1 * playerSpeed, playerRB.velocity.y);
         }
     }
 
@@ -74,6 +77,10 @@ public class PlayerController : MonoBehaviour
 
     private void ReactivateControls() {
         canMove = true;
+    }
+
+    private void PlayerDied() {
+        transform.position = startingPosition;
     }
 
 }

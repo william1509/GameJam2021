@@ -19,13 +19,13 @@ public class SideColliderController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        Debug.Log("touching wall");
+        Debug.Log(other.name);
+        other.sharedMaterial = Resources.Load("WallMaterial") as PhysicsMaterial2D;
         WallJump wj = new WallJump(true, jumpVector);
         transform.parent.SendMessage("SetWallJumpStatus", wj);
     }
     private void OnTriggerExit2D(Collider2D other)
     {
-        Debug.Log("leaving wall");
         WallJump wj = new WallJump(false, jumpVector);
         transform.parent.SendMessage("SetWallJumpStatus", wj);
     }

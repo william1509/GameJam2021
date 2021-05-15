@@ -38,7 +38,6 @@ public class PlayerController : MonoBehaviour
 
         if(Input.GetKeyDown(KeyCode.E))
         {
-            Debug.Log("Changing worlds");
             gameManager.ChangeWorlds();
         }
         if (Input.GetKeyDown(KeyCode.Space)) {
@@ -77,6 +76,7 @@ public class PlayerController : MonoBehaviour
 
     private void ReactivateControls() {
         canMove = true;
+        
     }
 
     private void PlayerDied() {

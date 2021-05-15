@@ -15,20 +15,19 @@ public class BottomColliderController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.E))
         {
-            Debug.Log("Changing world");
             
         }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        Debug.Log("touching ground");
+        other.sharedMaterial = Resources.Load("GroundMaterial") as PhysicsMaterial2D;
+        Debug.Log(other.sharedMaterial);
         transform.parent.SendMessage("SetJumpStatus", true);
         transform.parent.SendMessage("ReactivateControls", true);
     }
     private void OnTriggerExit2D(Collider2D other)
     {
-        Debug.Log("leaving ground");
         transform.parent.SendMessage("SetJumpStatus", false);
     }
 

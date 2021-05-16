@@ -6,9 +6,10 @@ public class CameraController : MonoBehaviour
 {
     // Start is called before the first frame update
     [SerializeField] Transform objectToFollow;
+
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame

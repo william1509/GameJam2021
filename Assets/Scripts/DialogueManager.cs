@@ -35,7 +35,7 @@ public class DialogueManager : MonoBehaviour {
 		DisplayNextSentence();
 	}
 
-	public void DisplayNextSentence ()
+	public bool DisplayNextSentence ()
 	{
 		if (printing_)
 			printing_ = false;
@@ -44,13 +44,15 @@ public class DialogueManager : MonoBehaviour {
 			if (sentences.Count == 0)
 			{
 				EndDialogue();
-				return;
+				return true;
 			}
 
 			string sentence = sentences.Dequeue();
 			StopAllCoroutines();
 			StartCoroutine(TypeSentence(sentence));
 		}
+
+		return false;
 	}
 
 	IEnumerator TypeSentence (string sentence)

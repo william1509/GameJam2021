@@ -35,7 +35,9 @@ public class PlayerController : MonoBehaviour
     public bool isGrounded_ = false;
     public bool isAired_ = false;
 
-
+    // Sounds
+    static string jumpSound = "Sounds/Jump";
+    AudioSource jumpAudioSource;
 
     enum AnimClip
     {
@@ -58,6 +60,9 @@ public class PlayerController : MonoBehaviour
     {
         playerRB = GetComponent<Rigidbody2D>();
         startingPosition = transform.position;
+
+        jumpAudioSource = gameObject.AddComponent<AudioSource>();
+        jumpAudioSource.clip = Resources.Load(jumpSound) as AudioClip;
     }
 
     // Update is called once per frame
@@ -104,13 +109,16 @@ public class PlayerController : MonoBehaviour
             setRunning(moving);
             if (moving)
             {
+                bool ok = playerRB.velocity.x == 5;
 
                 playerRB.velocity = playerRB.velocity + new Vector2(dir * acceleration * Time.deltaTime, 0);
                 if (dir * playerRB.velocity.x > maxSpeed)
                     playerRB.velocity = new Vector2(dir * maxSpeed, playerRB.velocity.y);
             }
             else if (isGrounded_)
+            {
                 playerRB.velocity = new Vector2(0, playerRB.velocity.y);
+            }
 
             // Set flip
             GetComponent<SpriteRenderer>().flipX = (direction_ == Side.LEFT) ? true : false;
@@ -245,12 +253,17 @@ public class PlayerController : MonoBehaviour
     private void Jump()
     {
         if (canJump)
+        {
+            jumpAudioSource.Play();
             JumpImpulsion(jumpPower_);
+        }
     }
     private void WallJump(Side directionOfWall)
     {
         if (canJump)
         {
+            jumpAudioSource.Play();
+
             // Jump opposite to wall
             direction_ = (directionOfWall == Side.LEFT) ? Side.RIGHT : Side.LEFT;
             // Jump
@@ -287,7 +300,8 @@ public class PlayerController : MonoBehaviour
         else
         {
             playerRB.gravityScale = 1f;
-            canJump = false;
+            if (!isGrounded_)
+                canJump = false;
         }
     }
 
@@ -302,7 +316,7 @@ public class PlayerController : MonoBehaviour
             canJump = true;
     }
 
-    private void PlayerDied() {
+    private void Die() {
         transform.position = startingPosition;
     }
 

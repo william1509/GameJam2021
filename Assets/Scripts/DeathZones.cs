@@ -6,7 +6,9 @@ using UnityEngine;
 class DeathZones : MonoBehaviour
 {
     public AudioClip deathClip;
+    public Canvas canvas;
     public bool alreadyPlayedOnce = false;
+
     // Start is called before the first frame update
     void Start()
     {

@@ -16,7 +16,7 @@ public class GameManager : MonoBehaviour
     public enum Ability { NONE, SWITCH, DOUBLE_JUMP }
 
 
-    bool canSwitch_ = false;
+    bool canSwitch_ = true;
     public void SetCanSwitch(bool canSwitch) { canSwitch_ = canSwitch; }
     public bool GetCanSwitch() { return canSwitch_; }
 

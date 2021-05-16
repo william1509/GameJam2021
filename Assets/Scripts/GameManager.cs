@@ -17,9 +17,18 @@ public class GameManager : MonoBehaviour
     static string distopianMusic = "Music/DistopianMusic";
     private MusicManager musicManager;
 
+    // Sound
+    static string switchSound = "Sounds/Timeshift";
+    AudioSource switchAudioSource;
+
     void Start()
     {
         InitMusic();
+
+        // Sound
+        switchAudioSource = gameObject.AddComponent<AudioSource>();
+        switchAudioSource.clip = Resources.Load(switchSound) as AudioClip;
+
         dystopicTilemap.SetActive(false);
     }
 
@@ -46,6 +55,8 @@ public class GameManager : MonoBehaviour
 
     public void SwitchState()
     {
+        switchAudioSource.Play();
+
         if (state_ == State.DYSTOPIA)
             state_ = State.UTOPIA;
         else if (state_ == State.UTOPIA)

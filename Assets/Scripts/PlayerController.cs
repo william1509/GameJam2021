@@ -35,7 +35,9 @@ public class PlayerController : MonoBehaviour
     public bool isGrounded_ = false;
     public bool isAired_ = false;
 
-
+    // Sounds
+    static string jumpSound = "Sounds/Jump";
+    AudioSource jumpAudioSource;
 
     enum AnimClip
     {
@@ -58,6 +60,9 @@ public class PlayerController : MonoBehaviour
     {
         playerRB = GetComponent<Rigidbody2D>();
         startingPosition = transform.position;
+
+        jumpAudioSource = gameObject.AddComponent<AudioSource>();
+        jumpAudioSource.clip = Resources.Load(jumpSound) as AudioClip;
     }
 
     // Update is called once per frame
@@ -248,12 +253,17 @@ public class PlayerController : MonoBehaviour
     private void Jump()
     {
         if (canJump)
+        {
+            jumpAudioSource.Play();
             JumpImpulsion(jumpPower_);
+        }
     }
     private void WallJump(Side directionOfWall)
     {
         if (canJump)
         {
+            jumpAudioSource.Play();
+
             // Jump opposite to wall
             direction_ = (directionOfWall == Side.LEFT) ? Side.RIGHT : Side.LEFT;
             // Jump

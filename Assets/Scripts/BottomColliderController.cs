@@ -21,7 +21,6 @@ public class BottomColliderController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        other.sharedMaterial = Resources.Load("GroundMaterial") as PhysicsMaterial2D;
         Debug.Log(other.sharedMaterial);
         transform.parent.SendMessage("SetJumpStatus", true);
         transform.parent.SendMessage("ReactivateControls", true);

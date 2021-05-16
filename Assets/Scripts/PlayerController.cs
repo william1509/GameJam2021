@@ -67,11 +67,16 @@ public class PlayerController : MonoBehaviour
     public void SetJumpStatus(bool status)
     {
         canJump = status;
+        float friction = status ? 5 : 0;
+        Debug.Log(friction);
+        GetComponent<Collider2D>().sharedMaterial.friction = friction;
     }
 
     private void SetWallJumpStatus(WallJump wj)
     {
         wallJump = wj;
+        float friction = wj.stickingToWall ? 0 : 5;
+        GetComponent<Collider2D>().sharedMaterial.friction = 0.0f;
     }
 
     private void ReactivateControls() {

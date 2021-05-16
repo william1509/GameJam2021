@@ -1,9 +1,11 @@
-﻿using UnityEngine.SceneManagement;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 public class PlayButton : MenuButton
 {
     protected override void ClickAction()
     {
-        SceneManager.LoadScene("Level-1", LoadSceneMode.Single);
+        menu_.GetGameManager().NextLevel();
     }
 }

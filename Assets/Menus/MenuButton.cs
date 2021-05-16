@@ -3,6 +3,8 @@ using UnityEngine.EventSystems;
 
 public abstract class MenuButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
+    public Menu menu_;
+
     static string buttonSelectedSound = "Sounds/ButtonSelect";
     public Animator menuAnimator;
     bool clicked = false;
@@ -35,7 +37,10 @@ public abstract class MenuButton : MonoBehaviour, IPointerEnterHandler, IPointer
         if (!clicked)
         {
             GetComponent<Animator>().Play("Clicked");
-            menuAnimator.Play("FadeToWhite");
+            if (menuAnimator != null)
+            {
+                menuAnimator.Play("FadeToWhite");
+            }
         }
 
         clicked = true;

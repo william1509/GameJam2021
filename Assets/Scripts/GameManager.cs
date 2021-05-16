@@ -1,12 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
     // Start is called before the first frame update
-    public GameObject utopicTileMap;
-    public GameObject dystopicTilemap;
+    private GameObject utopicTileMap;
+    private GameObject dystopicTilemap;
 
     public enum State { UTOPIA, DYSTOPIA }
     private State state_ = State.UTOPIA;
@@ -26,6 +27,19 @@ public class GameManager : MonoBehaviour
     public int GetMaxJumps() { return maxJumps_; }
 
 
+    private bool isPaused_ = false;
+
+
+
+    List<string> scenes = new List<string>()
+    {
+        "MainMenu",
+        "Level-1",
+        "Level-2"
+    };
+    int sceneIndex = 0;
+
+
 
 
     // Music
@@ -39,20 +53,88 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        InitMusic();
+        DontDestroyOnLoad(gameObject);
+        //GoToMainMenu();
+
+        //InitMusic();
 
         // Sound
-        switchAudioSource = gameObject.AddComponent<AudioSource>();
-        switchAudioSource.clip = Resources.Load(switchSound) as AudioClip;
-
-        dystopicTilemap.SetActive(false);
+        //switchAudioSource = gameObject.AddComponent<AudioSource>();
+        //switchAudioSource.clip = Resources.Load(switchSound) as AudioClip;
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
+
+
+
+    private GameObject GetCanvas()
+    {
+        GameObject canvas = GameObject.Find("Canvas");
+        if (canvas == null)
+        {
+            canvas = Instantiate(Resources.Load<GameObject>("Prefabs/Canvas")) as GameObject;
+            canvas.name = "Canvas";
+        }
+        return canvas;
+    }
+
+
+
+    private GameObject GetPauseMenu()
+    {
+        GameObject pauseMenu = GameObject.Find("PauseMenu");
+        if (pauseMenu == null)
+        {
+            pauseMenu = Instantiate(Resources.Load<GameObject>("Prefabs/PauseMenu")) as GameObject;
+            pauseMenu.name = "PauseMenu";
+            pauseMenu.transform.SetParent(GetCanvas().transform);
+            pauseMenu.transform.position = GetCanvas().GetComponent<RectTransform>().sizeDelta / 2;
+        }
+        return pauseMenu;
+    }
+
+
+
+    public void TogglePause()
+    {
+        isPaused_ = !isPaused_;
+
+        Debug.Log("TOGGLE");
+        if (isPaused_)
+            GetPauseMenu().GetComponent<PauseMenu>().Open();
+        else
+            GetPauseMenu().GetComponent<PauseMenu>().Close();
+    }
+
+    public bool GetIsPaused() { return isPaused_; }
+
+
+
+    private void LoadScene(int index)
+    {
+        sceneIndex = index;
+        SceneManager.LoadScene(scenes[sceneIndex]);
+
+        utopicTileMap = GameObject.Find("UtopicTilemap");
+        dystopicTilemap = GameObject.Find("DystopicTilemap");
+
+        if (utopicTileMap != null)
+            utopicTileMap.SetActive(false);
+        if (dystopicTilemap != null)
+            dystopicTilemap.SetActive(false);
+    }
+
+    public void GoToMainMenu() { LoadScene(0); }
+
+    public void RestartLevel() { LoadScene(sceneIndex); }
+
+    public void NextLevel() { LoadScene(sceneIndex + 1); }
+
+
 
     private void InitMusic()
     {

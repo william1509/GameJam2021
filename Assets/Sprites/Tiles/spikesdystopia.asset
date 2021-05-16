@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: spikesdystopia
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: 21300000, guid: 9575979bd0ee84c41bd37e3f5d700a02, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 643763adb6d947c4e8bf5facbadbb0b0, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1

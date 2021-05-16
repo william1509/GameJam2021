@@ -14,15 +14,15 @@ public class GameManager : MonoBehaviour
 
     public State GetState() { return state_; }
 
-    public enum Ability { NONE, SWITCH, DOUBLE_JUMP }
+    public enum Ability { NONE, SWITCH, DOUBLE_JUMP, GOAL }
 
 
-    bool canSwitch_ = true;
+    public bool canSwitch_ = false;
     public void SetCanSwitch(bool canSwitch) { canSwitch_ = canSwitch; }
     public bool GetCanSwitch() { return canSwitch_; }
 
 
-    int maxJumps_ = 1;
+    public int maxJumps_ = 1;
     public void SetMaxJumps(int maxJumps) { maxJumps_ = maxJumps; }
     public int GetMaxJumps() { return maxJumps_; }
 
@@ -35,11 +35,18 @@ public class GameManager : MonoBehaviour
     {
         "MainMenu",
         "Level-1",
-        "Level-2"
+        "Level-2",
+        "Level-3"
     };
-    int sceneIndex = 0;
+    public int sceneIndex = 0;
 
 
+
+    // Sounds
+    AudioSource audioSource;
+    static string jumpSound = "Sounds/Jump";
+    static string deathSound = "Sounds/Death";
+    static string switchSound = "Sounds/Timeshift";
 
 
     // Music
@@ -47,26 +54,34 @@ public class GameManager : MonoBehaviour
     static string distopianMusic = "Music/DistopianMusic";
     private MusicManager musicManager;
 
-    // Sound
-    static string switchSound = "Sounds/Timeshift";
-    AudioSource switchAudioSource;
-
     void Start()
     {
-        DontDestroyOnLoad(gameObject);
-        //GoToMainMenu();
+        if (sceneIndex > 0)
+            InitMusic();
 
-        //InitMusic();
+        audioSource = gameObject.AddComponent<AudioSource>();
 
-        // Sound
-        //switchAudioSource = gameObject.AddComponent<AudioSource>();
-        //switchAudioSource.clip = Resources.Load(switchSound) as AudioClip;
+        utopicTileMap = GameObject.Find("UtopicTilemap");
+        dystopicTilemap = GameObject.Find("DystopicTilemap");
+
+        if (utopicTileMap != null)
+            utopicTileMap.SetActive(true);
+        if (dystopicTilemap != null)
+            dystopicTilemap.SetActive(false);
     }
 
     // Update is called once per frame
     void Update()
     {
 
+    }
+
+
+
+    private void PlaySound(string path)
+    {
+        audioSource.clip = Resources.Load(path) as AudioClip;
+        audioSource.Play();
     }
 
 
@@ -99,11 +114,15 @@ public class GameManager : MonoBehaviour
 
 
 
+    public void ShowControls()
+    {
+
+    }
+
     public void TogglePause()
     {
         isPaused_ = !isPaused_;
 
-        Debug.Log("TOGGLE");
         if (isPaused_)
             GetPauseMenu().GetComponent<PauseMenu>().Open();
         else
@@ -130,9 +149,31 @@ public class GameManager : MonoBehaviour
 
     public void GoToMainMenu() { LoadScene(0); }
 
-    public void RestartLevel() { LoadScene(sceneIndex); }
+    public void RestartLevel()
+    {
+        LoadScene(sceneIndex);
+    }
 
-    public void NextLevel() { LoadScene(sceneIndex + 1); }
+    public void NextLevel()
+    {
+        if (sceneIndex == 2)
+            LoadScene(0);
+        else
+            LoadScene(sceneIndex + 1);
+    }
+
+
+
+    public void Die()
+    {
+        PlaySound(deathSound);
+        RestartLevel();
+    }
+
+    public void Jump()
+    {
+        PlaySound(jumpSound);
+    }
 
 
 
@@ -153,8 +194,6 @@ public class GameManager : MonoBehaviour
 
     public void SwitchState()
     {
-        switchAudioSource.Play();
-
         if (state_ == State.DYSTOPIA)
             state_ = State.UTOPIA;
         else if (state_ == State.UTOPIA)
@@ -162,6 +201,8 @@ public class GameManager : MonoBehaviour
 
         dystopicTilemap.SetActive(state_ == State.DYSTOPIA);
         utopicTileMap.SetActive(state_ == State.UTOPIA);
+
+        PlaySound(switchSound);
 
         // Change the music
         musicManager.ToggleMusic();

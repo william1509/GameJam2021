@@ -5,8 +5,9 @@ using UnityEngine;
 public class CollectibleController : NPCController
 {
     public GameManager.Ability ability;
+    public bool hasDialog = true;
 
-    private bool isDropped_;
+    public bool isDropped_;
 
 
 
@@ -33,7 +34,8 @@ public class CollectibleController : NPCController
 
     new public virtual void Interact(PlayerController character)
     {
-        base.Interact(character);
+        if (hasDialog)
+            base.Interact(character);
         character.GiveAbility(ability);
     }
 }

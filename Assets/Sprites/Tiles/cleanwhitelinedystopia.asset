@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: cleanwhitelinedystopia
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: 21300000, guid: a90628e4ae23d1b4ebaef89dff7b7722, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 78d3a3c65cc4a3d41894c5d64d0e8777, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1

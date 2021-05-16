@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: doorbot
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: 21300000, guid: 257c4d1842dcb0a46a359c6558e2da56, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 90af171917fef7e4695a8a2cdbe3f3b8, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1

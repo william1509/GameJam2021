@@ -12,7 +12,7 @@ public class PlayerController : MonoBehaviour
 
 
 
-    private List<NPCController> NPCs;
+    public List<NPCController> NPCs;
     private NPCController availableNPC_;
 
 
@@ -39,10 +39,6 @@ public class PlayerController : MonoBehaviour
     public bool isFrozen_ = false;
 
     public int contactCount_ = 0;
-
-    // Sounds
-    static string jumpSound = "Sounds/Jump";
-    AudioSource jumpAudioSource;
 
 
 
@@ -111,10 +107,9 @@ public class PlayerController : MonoBehaviour
             }
 
         SetState();
-
-        jumpAudioSource = gameObject.AddComponent<AudioSource>();
-        jumpAudioSource.clip = Resources.Load(jumpSound) as AudioClip;
     }
+
+
 
     // Update is called once per frame
     void Update()
@@ -342,7 +337,7 @@ public class PlayerController : MonoBehaviour
         isAired_ = true;
         jumpsLeft--;
 
-        jumpAudioSource.Play();
+        gameManager.Jump();
     }
     private void Jump()
     {
@@ -407,7 +402,7 @@ public class PlayerController : MonoBehaviour
 
     private void Die()
     {
-        transform.position = startingPosition;
+        gameManager.RestartLevel();
     }
 
 
@@ -422,6 +417,9 @@ public class PlayerController : MonoBehaviour
     {
         switch (ability)
         {
+            case GameManager.Ability.GOAL:
+                gameManager.NextLevel();
+                break;
             case GameManager.Ability.SWITCH:
                 gameManager.SetCanSwitch(true);
                 break;
@@ -469,6 +467,10 @@ public class PlayerController : MonoBehaviour
                     availableNPC_.ShowQButton(true);
                 }
         }
+
+        // Trap
+        if (collider.gameObject.CompareTag("Danger"))
+            Die();
     }
 
     private void OnTriggerExit2D(Collider2D collider)

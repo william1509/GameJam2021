@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: erlenmeyergreenpotion
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: 21300000, guid: 7af4a9d34c3b75145b26b74aaf8b46e5, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6f9371d87a990f84da3352dfcc8ecc0b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: sideglass
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: 21300000, guid: 6c56a47f1a23a454eabfb4f2d9698c13, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 080171dfef5c36d4ab7fbb076572f196, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1

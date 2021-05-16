@@ -104,13 +104,16 @@ public class PlayerController : MonoBehaviour
             setRunning(moving);
             if (moving)
             {
+                bool ok = playerRB.velocity.x == 5;
 
                 playerRB.velocity = playerRB.velocity + new Vector2(dir * acceleration * Time.deltaTime, 0);
                 if (dir * playerRB.velocity.x > maxSpeed)
                     playerRB.velocity = new Vector2(dir * maxSpeed, playerRB.velocity.y);
             }
             else if (isGrounded_)
+            {
                 playerRB.velocity = new Vector2(0, playerRB.velocity.y);
+            }
 
             // Set flip
             GetComponent<SpriteRenderer>().flipX = (direction_ == Side.LEFT) ? true : false;
@@ -287,7 +290,8 @@ public class PlayerController : MonoBehaviour
         else
         {
             playerRB.gravityScale = 1f;
-            canJump = false;
+            if (!isGrounded_)
+                canJump = false;
         }
     }
 
@@ -302,7 +306,7 @@ public class PlayerController : MonoBehaviour
             canJump = true;
     }
 
-    private void PlayerDied() {
+    private void Die() {
         transform.position = startingPosition;
     }
 

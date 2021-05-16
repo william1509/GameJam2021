@@ -9,16 +9,20 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     public GameManager gameManager;
     private Rigidbody2D playerRB;
-    private bool canJump = false;
 
 
 
+    public GameObject utopiaNPCs;
+    public GameObject dystopiaNPCs;
+    private List<NPCController> NPCs;
     private NPCController availableNPC_;
 
 
 
     public enum Type { NONE, HAND, FOOT };
     public enum Side { NONE, LEFT, RIGHT };
+
+    public int jumpsLeft = 1;
 
 
 
@@ -33,11 +37,16 @@ public class PlayerController : MonoBehaviour
 
     public bool isRunning_ = false;
     public bool isGrounded_ = false;
-    public bool isAired_ = false;
+    public bool isAired_ = true;
+    public bool isFrozen_ = false;
+
+    public int contactCount_ = 0;
 
     // Sounds
     static string jumpSound = "Sounds/Jump";
     AudioSource jumpAudioSource;
+
+
 
     enum AnimClip
     {
@@ -50,7 +59,8 @@ public class PlayerController : MonoBehaviour
     private Vector2 wallJumpPower_ = new Vector2(5f, 7f);
     private Vector2 jumpPower_ = new Vector2(0, 7f);
     private const float maxSpeed = 5f;
-    private const float acceleration = 15f;
+    private const float groundedAcceleration = 30f;
+    private const float airedAcceleration = 15f;
 
 
 
@@ -61,6 +71,42 @@ public class PlayerController : MonoBehaviour
         playerRB = GetComponent<Rigidbody2D>();
         startingPosition = transform.position;
 
+        NPCs = new List<NPCController>();
+        foreach (NPCController NPC in utopiaNPCs.GetComponentsInChildren<NPCController>())
+        {
+            NPC.SetDimension(GameManager.State.UTOPIA);
+            NPCs.Add(NPC);
+            if (NPC.GetType() == typeof(SurvivorController))
+            {
+                NPCController droppedItem = (NPC as SurvivorController).droppedItem;
+                if (droppedItem != null)
+                {
+                    droppedItem.gameObject.SetActive(true);
+                    droppedItem.SetDimension(GameManager.State.UTOPIA);
+                    droppedItem.gameObject.SetActive(false);
+                    NPCs.Add(droppedItem);
+                }
+            }
+        }
+        foreach (NPCController NPC in dystopiaNPCs.GetComponentsInChildren<NPCController>())
+        {
+            NPC.SetDimension(GameManager.State.DYSTOPIA);
+            NPCs.Add(NPC);
+            if (NPC.GetType() == typeof(SurvivorController))
+            {
+                NPCController droppedItem = (NPC as SurvivorController).droppedItem;
+                if (droppedItem != null)
+                {
+                    droppedItem.gameObject.SetActive(true);
+                    droppedItem.SetDimension(GameManager.State.DYSTOPIA);
+                    droppedItem.gameObject.SetActive(false);
+                    NPCs.Add(droppedItem);
+                }
+            }
+        }
+
+        SetState();
+
         jumpAudioSource = gameObject.AddComponent<AudioSource>();
         jumpAudioSource.clip = Resources.Load(jumpSound) as AudioClip;
     }
@@ -68,128 +114,162 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Q)) { Interact(); }
 
-        if (Input.GetKeyDown(KeyCode.E))
+
+
+        if (!isFrozen_)
         {
-            gameManager.SwitchState();
-            Animate(currentAnimation);
-        }
-
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            Interact();
-        }
+            if (gameManager.GetCanSwitch())
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    gameManager.SwitchState();
+                    SetState();
+                }
 
 
 
-        bool moving = false;
-        if (!isWalled())
-        {
-            if (Input.GetKey(KeyCode.LeftArrow))
-            { direction_ = Side.LEFT; moving = true; }
-            else if (Input.GetKey(KeyCode.RightArrow))
-            { direction_ = Side.RIGHT; moving = true; }
-        }
-        int dir = SideToDir(direction_);
-
-
-
-        if (isWalled())
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-                WallJump(walledOn_);
-        }
-        else
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-                Jump();
-
-
-
-            setRunning(moving);
-            if (moving)
+            bool moving = false;
+            // Can not move if walled or on corner, falling (bug)
+            if (!isWalled() && !(isAired_ && contactCount_ > 0))
             {
-                bool ok = playerRB.velocity.x == 5;
-
-                playerRB.velocity = playerRB.velocity + new Vector2(dir * acceleration * Time.deltaTime, 0);
-                if (dir * playerRB.velocity.x > maxSpeed)
-                    playerRB.velocity = new Vector2(dir * maxSpeed, playerRB.velocity.y);
+                if (Input.GetKey(KeyCode.LeftArrow))
+                { direction_ = Side.LEFT; moving = true; }
+                else if (Input.GetKey(KeyCode.RightArrow))
+                { direction_ = Side.RIGHT; moving = true; }
             }
-            else if (isGrounded_)
+            int dir = SideToDir(direction_);
+
+
+
+            if (isWalled())
             {
-                playerRB.velocity = new Vector2(0, playerRB.velocity.y);
+                if (Input.GetKeyDown(KeyCode.Space))
+                    WallJump(walledOn_);
             }
-
-            // Set flip
-            GetComponent<SpriteRenderer>().flipX = (direction_ == Side.LEFT) ? true : false;
-        }
-
-
-
-        // Set walled if going the right direction
-        if (isAired_ && wallAtHand_ == direction_ && wallAtFoot_ == direction_ && wallJumpTimer_ == 0)
-        {
-            if (!isWalled())
-                WallOn(direction_);
-        }
-        else if (isWalled())
-            WallOn(Side.NONE);
+            else
+            {
+                if (Input.GetKeyDown(KeyCode.Space))
+                    Jump();
 
 
 
-        // Reduce jump timer
-        if (wallJumpTimer_ > 0)
-            wallJumpTimer_ = Mathf.Max(wallJumpTimer_ - Time.deltaTime, 0);
+                setRunning(moving);
+                if (moving)
+                {
+                    bool ok = playerRB.velocity.x == 5;
 
+                    if (isAired_)
+                        playerRB.velocity = playerRB.velocity + new Vector2(dir * airedAcceleration * Time.deltaTime, 0);
+                    else
+                        playerRB.velocity = playerRB.velocity + new Vector2(dir * groundedAcceleration * Time.deltaTime, 0);
 
-
-        // Animation
-        switch (currentAnimation)
-        {
-            case AnimClip.idle:
-                if (isRunning_)
-                    Animate(AnimClip.running);
-                else if (isAired_)
-                    Animate(AnimClip.jumping);
-                break;
-
-            case AnimClip.running:
-                if (!isRunning_)
-                    Animate(AnimClip.idle);
-                else if (isAired_)
-                    Animate(AnimClip.jumping);
-                break;
-
-            case AnimClip.jumping:
-                if (isWalled())
-                    Animate(AnimClip.walled);
+                    if (dir * playerRB.velocity.x > maxSpeed)
+                        playerRB.velocity = new Vector2(dir * maxSpeed, playerRB.velocity.y);
+                }
                 else if (isGrounded_)
                 {
+                    playerRB.velocity = new Vector2(0, playerRB.velocity.y);
+                }
+
+                // Set flip
+                GetComponent<SpriteRenderer>().flipX = (direction_ == Side.LEFT) ? true : false;
+            }
+
+
+
+            // Set walled if going the right direction
+            if (isAired_ && wallAtHand_ == direction_ && wallAtFoot_ == direction_ && wallJumpTimer_ == 0)
+            {
+                if (!isWalled())
+                    WallOn(direction_);
+            }
+            else if (isWalled())
+                WallOn(Side.NONE);
+
+
+
+            // Reduce jump timer
+            if (wallJumpTimer_ > 0)
+                wallJumpTimer_ = Mathf.Max(wallJumpTimer_ - Time.deltaTime, 0);
+        }
+
+
+
+        if (!isAired_)
+            playerRB.velocity = new Vector2(playerRB.velocity.x, 0);
+
+
+
+        if (isFrozen_)
+        {
+            if (currentAnimation != AnimClip.idle)
+                Animate(AnimClip.idle);
+        }
+        else
+            // Animation
+            switch (currentAnimation)
+            {
+                case AnimClip.idle:
                     if (isRunning_)
                         Animate(AnimClip.running);
-                    else
-                        Animate(AnimClip.idle);
-                }
-                break;
-
-            case AnimClip.walled:
-                if (!isWalled())
-                {
-                    if (isAired_)
+                    else if (isAired_)
                         Animate(AnimClip.jumping);
-                    else
+                    break;
+
+                case AnimClip.running:
+                    if (!isRunning_)
                         Animate(AnimClip.idle);
-                }
-                break;
-        }
+                    else if (isAired_)
+                        Animate(AnimClip.jumping);
+                    break;
+
+                case AnimClip.jumping:
+                    if (isWalled())
+                        Animate(AnimClip.walled);
+                    else if (isGrounded_)
+                    {
+                        if (isRunning_)
+                            Animate(AnimClip.running);
+                        else
+                            Animate(AnimClip.idle);
+                    }
+                    break;
+
+                case AnimClip.walled:
+                    if (!isWalled())
+                    {
+                        if (isAired_)
+                            Animate(AnimClip.jumping);
+                        else
+                            Animate(AnimClip.idle);
+                    }
+                    break;
+            }
     }
 
 
 
+
+    private void SetState()
+    {
+        Animate(currentAnimation);
+
+        // Switch NPCs
+        foreach (var NPC in NPCs)
+        {
+            if (NPC.GetType() == typeof(CollectibleController))
+                (NPC as CollectibleController).SetVisibility(gameManager.GetState());
+            else
+                NPC.SetVisibility(gameManager.GetState());
+        }
+    }
+
+
     private void Animate(AnimClip clip)
     {
-        bool isDystopia = gameManager.getState() == GameManager.State.DYSTOPIA;
-        bool isUtopia = gameManager.getState() == GameManager.State.UTOPIA;
+        bool isDystopia = gameManager.GetState() == GameManager.State.DYSTOPIA;
+        bool isUtopia = gameManager.GetState() == GameManager.State.UTOPIA;
 
         string name = "";
         switch (clip)
@@ -248,22 +328,19 @@ public class PlayerController : MonoBehaviour
     {
         playerRB.velocity = new Vector2(playerRB.velocity.x + jumpPower.x, jumpPower.y);
         isAired_ = true;
-        canJump = false;
+        jumpsLeft--;
+
+        jumpAudioSource.Play();
     }
     private void Jump()
     {
-        if (canJump)
-        {
-            jumpAudioSource.Play();
+        if (jumpsLeft > 0)
             JumpImpulsion(jumpPower_);
-        }
     }
     private void WallJump(Side directionOfWall)
     {
-        if (canJump)
+        if (jumpsLeft > 0)
         {
-            jumpAudioSource.Play();
-
             // Jump opposite to wall
             direction_ = (directionOfWall == Side.LEFT) ? Side.RIGHT : Side.LEFT;
             // Jump
@@ -293,15 +370,15 @@ public class PlayerController : MonoBehaviour
         if (isWalled())
         {
             playerRB.gravityScale = 0.25f;
-            canJump = true;
+            jumpsLeft = gameManager.GetMaxJumps();
             // Stop movement
             playerRB.velocity = Vector2.zero;
         }
         else
         {
             playerRB.gravityScale = 1f;
-            if (!isGrounded_)
-                canJump = false;
+            //if (!isGrounded_)
+            //    jumpsLeft = 0;
         }
     }
 
@@ -313,21 +390,60 @@ public class PlayerController : MonoBehaviour
 
         isAired_ = !isGrounded;
         if (isGrounded)
-            canJump = true;
+            jumpsLeft = gameManager.GetMaxJumps();
     }
 
-    private void Die() {
+    private void Die()
+    {
         transform.position = startingPosition;
     }
+
+
+
+
+
+    public void Freeze(bool frozen) { isFrozen_ = frozen; }
+
+
+
+    public void GiveAbility(GameManager.Ability ability)
+    {
+        switch (ability)
+        {
+            case GameManager.Ability.SWITCH:
+                gameManager.SetCanSwitch(true);
+                break;
+            case GameManager.Ability.DOUBLE_JUMP:
+                gameManager.SetMaxJumps(2);
+                jumpsLeft = gameManager.GetMaxJumps();
+                break;
+        }
+    }
+
+
 
     private void Interact()
     {
         if (availableNPC_ != null)
         {
-            availableNPC_.GetComponent<SpriteRenderer>().flipX = availableNPC_.gameObject.transform.position.x > transform.position.x;
-            availableNPC_.Interact();
+            if (availableNPC_.canFlip)
+                availableNPC_.GetComponent<SpriteRenderer>().flipX = availableNPC_.gameObject.transform.position.x > transform.position.x;
+
+            if (availableNPC_.GetType() == typeof(CollectibleController))
+                (availableNPC_ as CollectibleController).Interact(this);
+            else if (availableNPC_.GetType() == typeof(SurvivorController))
+                (availableNPC_ as SurvivorController).Interact(this);
+            else
+                availableNPC_.Interact(this);
         }
     }
+
+
+
+    private void OnCollisionEnter2D(Collision2D collision) { contactCount_++; }
+    private void OnCollisionExit2D(Collision2D collision) { contactCount_--; }
+
+
 
     private void OnTriggerEnter2D(Collider2D collider)
     {
@@ -335,7 +451,11 @@ public class PlayerController : MonoBehaviour
         {
             NPCController NPC = collider.GetComponent<NPCController>();
             if (NPC != null)
-                availableNPC_ = NPC;
+                if (NPCs.Contains(NPC))
+                {
+                    availableNPC_ = NPC;
+                    availableNPC_.ShowQButton(true);
+                }
         }
     }
 
@@ -344,7 +464,10 @@ public class PlayerController : MonoBehaviour
         if (availableNPC_ != null)
             if (collider.GetComponent<NPCController>() == availableNPC_)
             {
-                availableNPC_.StopInteraction();
+                if (!availableNPC_.freezePlayerOnInteract)
+                    availableNPC_.StopInteraction(this);
+
+                availableNPC_.ShowQButton(false);
                 availableNPC_ = null;
             }
     }

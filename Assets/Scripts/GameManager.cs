@@ -10,7 +10,23 @@ public class GameManager : MonoBehaviour
 
     public enum State { UTOPIA, DYSTOPIA }
     private State state_ = State.UTOPIA;
-    public State getState() { return state_; }
+
+    public State GetState() { return state_; }
+
+    public enum Ability { NONE, SWITCH, DOUBLE_JUMP }
+
+
+    bool canSwitch_ = false;
+    public void SetCanSwitch(bool canSwitch) { canSwitch_ = canSwitch; }
+    public bool GetCanSwitch() { return canSwitch_; }
+
+
+    int maxJumps_ = 1;
+    public void SetMaxJumps(int maxJumps) { maxJumps_ = maxJumps; }
+    public int GetMaxJumps() { return maxJumps_; }
+
+
+
 
     // Music
     static string utopianMusic = "Music/UtopianMusic";

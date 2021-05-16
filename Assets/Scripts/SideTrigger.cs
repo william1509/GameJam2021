@@ -8,11 +8,13 @@ public class SideTrigger : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collider)
     {
-        transform.parent.SendMessage("WallAt", side);
+        if (collider.CompareTag("Tile"))
+            transform.parent.SendMessage("WallAt", side);
     }
 
     private void OnTriggerExit2D(Collider2D collider)
     {
-        transform.parent.SendMessage("NoWallAt", side);
+        if (collider.CompareTag("Tile"))
+            transform.parent.SendMessage("NoWallAt", side);
     }
 }

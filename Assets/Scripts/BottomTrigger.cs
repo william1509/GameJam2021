@@ -6,10 +6,12 @@ public class BottomTrigger : MonoBehaviour
 {
     private void OnTriggerEnter2D(Collider2D collider)
     {
-        transform.parent.SendMessage("LandUnder", true);
+        if (collider.CompareTag("Tile"))
+            transform.parent.SendMessage("Ground", true);
     }
     private void OnTriggerExit2D(Collider2D collider)
     {
-        transform.parent.SendMessage("LandUnder", false);
+        if (collider.CompareTag("Tile"))
+            transform.parent.SendMessage("Ground", false);
     }
 }

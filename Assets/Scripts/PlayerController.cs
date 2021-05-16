@@ -29,6 +29,10 @@ public class PlayerController : MonoBehaviour
 
 
 
+    private NPCController availableNPC_;
+
+
+
     public enum Side { NONE, LEFT, RIGHT };
     private Side direction_ = Side.RIGHT;
     private Side wallAt_ = Side.NONE;
@@ -37,6 +41,7 @@ public class PlayerController : MonoBehaviour
 
 
     public bool isRunning_ = false;
+    public bool isGrounded_ = false;
     public bool isAired_ = false;
 
 
@@ -78,6 +83,11 @@ public class PlayerController : MonoBehaviour
         {
             gameManager.SwitchState();
             Animate(currentAnimation);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            Interact();
         }
 
 
@@ -144,7 +154,7 @@ public class PlayerController : MonoBehaviour
             case AnimClip.jumping:
                 if (isWalled())
                     Animate(AnimClip.walled);
-                else if (!isAired_)
+                else if (isGrounded_)
                 {
                     if (isRunning_)
                         Animate(AnimClip.running);
@@ -284,10 +294,12 @@ public class PlayerController : MonoBehaviour
 
 
 
-    private void LandUnder(bool landUnder)
+    private void Ground(bool isGrounded)
     {
-        isAired_ = !landUnder;
-        if (landUnder)
+        isGrounded_ = isGrounded;
+
+        isAired_ = !isGrounded;
+        if (isGrounded)
             canJump = true;
     }
 
@@ -295,4 +307,38 @@ public class PlayerController : MonoBehaviour
         transform.position = startingPosition;
     }
 
+
+
+
+
+    private void Interact()
+    {
+        if (availableNPC_ != null)
+        {
+            availableNPC_.GetComponent<SpriteRenderer>().flipX = availableNPC_.gameObject.transform.position.x > transform.position.x;
+            availableNPC_.Interact();
+        }
+    }
+
+
+
+    private void OnTriggerEnter2D(Collider2D collider)
+    {
+        if (availableNPC_ == null)
+        {
+            NPCController NPC = collider.GetComponent<NPCController>();
+            if (NPC != null)
+                availableNPC_ = NPC;
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D collider)
+    {
+        if (availableNPC_ != null)
+            if (collider.GetComponent<NPCController>() == availableNPC_)
+            {
+                availableNPC_.StopInteraction();
+                availableNPC_ = null;
+            }
+    }
 }

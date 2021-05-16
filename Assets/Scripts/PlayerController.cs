@@ -2,17 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-struct WallJump
-{
-    public bool stickingToWall;
-    public Vector2 jumpVector;
 
-    public WallJump(bool stickingToWall, Vector2 jumpVector)
-    {
-        this.stickingToWall = stickingToWall;
-        this.jumpVector = jumpVector;
-    }
-}
 
 public class PlayerController : MonoBehaviour
 {
@@ -23,20 +13,21 @@ public class PlayerController : MonoBehaviour
 
 
 
-    private Dictionary<Side, Collider2D> sideColliders;
-    public Collider2D leftCollider;
-    public Collider2D rightCollider;
-
-
-
     private NPCController availableNPC_;
 
 
 
+    public enum Type { NONE, HAND, FOOT };
     public enum Side { NONE, LEFT, RIGHT };
+
+
+
     private Side direction_ = Side.RIGHT;
-    private Side wallAt_ = Side.NONE;
+    private Side wallAtHand_ = Side.NONE;
+    private Side wallAtFoot_ = Side.NONE;
     private Side walledOn_ = Side.NONE;
+
+    private float wallJumpTimer_ = 0;
 
 
 
@@ -56,10 +47,10 @@ public class PlayerController : MonoBehaviour
 
     private Vector2 wallJumpPower_ = new Vector2(5f, 7f);
     private Vector2 jumpPower_ = new Vector2(0, 7f);
+    private const float maxSpeed = 5f;
+    private const float acceleration = 15f;
 
 
-
-    [SerializeField] float playerSpeed = 5f;
 
     private Vector2 startingPosition;
 
@@ -67,12 +58,6 @@ public class PlayerController : MonoBehaviour
     {
         playerRB = GetComponent<Rigidbody2D>();
         startingPosition = transform.position;
-
-        sideColliders = new Dictionary<Side, Collider2D>()
-        {
-            { Side.LEFT, leftCollider },
-            { Side.RIGHT, rightCollider }
-        };
     }
 
     // Update is called once per frame
@@ -93,7 +78,7 @@ public class PlayerController : MonoBehaviour
 
 
         bool moving = false;
-        if (!isAired_)
+        if (!isWalled())
         {
             if (Input.GetKey(KeyCode.LeftArrow))
             { direction_ = Side.LEFT; moving = true; }
@@ -107,7 +92,7 @@ public class PlayerController : MonoBehaviour
         if (isWalled())
         {
             if (Input.GetKeyDown(KeyCode.Space))
-                WallJump(direction_);
+                WallJump(walledOn_);
         }
         else
         {
@@ -118,7 +103,14 @@ public class PlayerController : MonoBehaviour
 
             setRunning(moving);
             if (moving)
-                playerRB.velocity = new Vector2(dir * playerSpeed, playerRB.velocity.y);
+            {
+
+                playerRB.velocity = playerRB.velocity + new Vector2(dir * acceleration * Time.deltaTime, 0);
+                if (dir * playerRB.velocity.x > maxSpeed)
+                    playerRB.velocity = new Vector2(dir * maxSpeed, playerRB.velocity.y);
+            }
+            else if (isGrounded_)
+                playerRB.velocity = new Vector2(0, playerRB.velocity.y);
 
             // Set flip
             GetComponent<SpriteRenderer>().flipX = (direction_ == Side.LEFT) ? true : false;
@@ -127,10 +119,19 @@ public class PlayerController : MonoBehaviour
 
 
         // Set walled if going the right direction
-        if (isAired_ && wallAt_ == direction_)
-            WallOn(direction_);
+        if (isAired_ && wallAtHand_ == direction_ && wallAtFoot_ == direction_ && wallJumpTimer_ == 0)
+        {
+            if (!isWalled())
+                WallOn(direction_);
+        }
         else if (isWalled())
             WallOn(Side.NONE);
+
+
+
+        // Reduce jump timer
+        if (wallJumpTimer_ > 0)
+            wallJumpTimer_ = Mathf.Max(wallJumpTimer_ - Time.deltaTime, 0);
 
 
 
@@ -218,10 +219,7 @@ public class PlayerController : MonoBehaviour
             float completion = stateInfo.normalizedTime;
             float duration = stateInfo.length;
             float frameTime = (completion % duration);
-            //Debug.Log("Wanted : " + frameTime);
             GetComponent<Animator>().Play(name, 0, frameTime);
-            //Debug.Log("Got : " + GetComponent<Animator>().GetCurrentAnimatorStateInfo(0).normalizedTime);
-            //Debug.Log("");
         }
         else
             // Simply play from start
@@ -240,56 +238,57 @@ public class PlayerController : MonoBehaviour
 
     private void JumpImpulsion(Vector2 jumpPower)
     {
-        if (canJump)
-        {
-            playerRB.AddForce(jumpPower, ForceMode2D.Impulse);
-            isAired_ = true;
-            canJump = false;
-        }
+        playerRB.velocity = new Vector2(playerRB.velocity.x + jumpPower.x, jumpPower.y);
+        isAired_ = true;
+        canJump = false;
     }
     private void Jump()
     {
         if (canJump)
             JumpImpulsion(jumpPower_);
     }
-    private void WallJump(Side direction)
+    private void WallJump(Side directionOfWall)
     {
         if (canJump)
         {
-            // Switch direction
-            direction_ = (direction_ == Side.LEFT) ? Side.RIGHT : Side.LEFT;
+            // Jump opposite to wall
+            direction_ = (directionOfWall == Side.LEFT) ? Side.RIGHT : Side.LEFT;
             // Jump
             JumpImpulsion(new Vector2(wallJumpPower_.x * SideToDir(direction_), wallJumpPower_.y));
+            wallJumpTimer_ = 0.1f;
         }
     }
 
 
 
-    int SideToDir(Side side) { return (direction_ == Side.LEFT) ? -1 : 1; }
+    int SideToDir(Side side) { return (side == Side.LEFT) ? -1 : 1; }
 
 
 
-    private void WallAt(Side side)
-    {
-        wallAt_ = side;
-    }
-    private void NoWallAt(Side side)
-    {
-        wallAt_ = (wallAt_ == side) ? Side.NONE : wallAt_;
-    }
+    private void WallAtHand(Side side) { wallAtHand_ = side; }
+    private void WallAtFoot(Side side) { wallAtFoot_ = side; }
+    private void NoWallAtHand(Side side) { wallAtHand_ = (wallAtHand_ == side) ? Side.NONE : wallAtHand_; }
+    private void NoWallAtFoot(Side side) { wallAtFoot_ = (wallAtFoot_ == side) ? Side.NONE : wallAtFoot_; }
+
+
+
     private void WallOn(Side side)
     {
         walledOn_ = side;
 
-        // Walled
+        // If walled
         if (isWalled())
         {
-            GetComponent<Rigidbody2D>().gravityScale = 0.1f;
+            playerRB.gravityScale = 0.25f;
             canJump = true;
+            // Stop movement
+            playerRB.velocity = Vector2.zero;
         }
-        // NOT walled
         else
-             GetComponent<Rigidbody2D>().gravityScale = 1;
+        {
+            playerRB.gravityScale = 1f;
+            canJump = false;
+        }
     }
 
 

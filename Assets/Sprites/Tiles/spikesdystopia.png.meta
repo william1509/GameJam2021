@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
+guid: 643763adb6d947c4e8bf5facbadbb0b0
+=======
 guid: 9575979bd0ee84c41bd37e3f5d700a02
+>>>>>>> 0e5043d00fc46e8f88ac3dbffb7b38c7e85fa2db
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -23,7 +27,10 @@ TextureImporter:
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
+<<<<<<< HEAD
+=======
   vTOnly: 0
+>>>>>>> 0e5043d00fc46e8f88ac3dbffb7b38c7e85fa2db
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -55,12 +62,18 @@ TextureImporter:
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
+<<<<<<< HEAD
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+=======
   flipbookRows: 1
   flipbookColumns: 1
   maxTextureSizeSet: 0
   compressionQualitySet: 0
   textureFormatSet: 0
   ignorePngGamma: 0
+>>>>>>> 0e5043d00fc46e8f88ac3dbffb7b38c7e85fa2db
   applyGammaDecoding: 0
   platformSettings:
   - serializedVersion: 3

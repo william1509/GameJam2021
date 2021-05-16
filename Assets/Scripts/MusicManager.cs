@@ -34,14 +34,14 @@ public class MusicManager : MonoBehaviour
     {
         if (utopianPlaying)
         {
-            StartCoroutine(FadeAudioSource.StartFade(utopianSource, 2, 0.0f));
-            StartCoroutine(FadeAudioSource.StartFade(distopianSource, 2, 1.0f));
+            StartCoroutine(FadeAudioSource.StartFade(utopianSource, 1, 0.0f));
+            StartCoroutine(FadeAudioSource.StartFade(distopianSource, 1, 1.0f));
             utopianPlaying = false;
         }
         else
         {
-            StartCoroutine(FadeAudioSource.StartFade(utopianSource, 2, 1.0f));
-            StartCoroutine(FadeAudioSource.StartFade(distopianSource, 2, 0.0f));
+            StartCoroutine(FadeAudioSource.StartFade(utopianSource, 1, 1.0f));
+            StartCoroutine(FadeAudioSource.StartFade(distopianSource, 1, 0.0f));
             utopianPlaying = true;
         }
     }

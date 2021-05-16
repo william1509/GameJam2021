@@ -2,10 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class QuitButton : MenuButton
+public class RetryButton : MenuButton
 {
     protected override void ClickAction()
     {
-        Application.Quit();
+        menu_.GetGameManager().RestartLevel();
     }
 }

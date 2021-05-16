@@ -7,13 +7,11 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     // Start is called before the first frame update
-    public GameManager gameManager;
+    private GameManager gameManager;
     private Rigidbody2D playerRB;
 
 
 
-    public GameObject utopiaNPCs;
-    public GameObject dystopiaNPCs;
     private List<NPCController> NPCs;
     private NPCController availableNPC_;
 
@@ -68,42 +66,49 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+
         playerRB = GetComponent<Rigidbody2D>();
         startingPosition = transform.position;
 
+        GameObject utopicNPCs = GameObject.Find("UtopicNPCs");
+        GameObject dystopicNPCs = GameObject.Find("DystopicNPCs");
+
         NPCs = new List<NPCController>();
-        foreach (NPCController NPC in utopiaNPCs.GetComponentsInChildren<NPCController>())
-        {
-            NPC.SetDimension(GameManager.State.UTOPIA);
-            NPCs.Add(NPC);
-            if (NPC.GetType() == typeof(SurvivorController))
+        if (utopicNPCs != null)
+            foreach (NPCController NPC in utopicNPCs.GetComponentsInChildren<NPCController>())
             {
-                NPCController droppedItem = (NPC as SurvivorController).droppedItem;
-                if (droppedItem != null)
+                NPC.SetDimension(GameManager.State.UTOPIA);
+                NPCs.Add(NPC);
+                if (NPC.GetType() == typeof(SurvivorController))
                 {
-                    droppedItem.gameObject.SetActive(true);
-                    droppedItem.SetDimension(GameManager.State.UTOPIA);
-                    droppedItem.gameObject.SetActive(false);
-                    NPCs.Add(droppedItem);
+                    NPCController droppedItem = (NPC as SurvivorController).droppedItem;
+                    if (droppedItem != null)
+                    {
+                        droppedItem.gameObject.SetActive(true);
+                        droppedItem.SetDimension(GameManager.State.UTOPIA);
+                        droppedItem.gameObject.SetActive(false);
+                        NPCs.Add(droppedItem);
+                    }
                 }
             }
-        }
-        foreach (NPCController NPC in dystopiaNPCs.GetComponentsInChildren<NPCController>())
-        {
-            NPC.SetDimension(GameManager.State.DYSTOPIA);
-            NPCs.Add(NPC);
-            if (NPC.GetType() == typeof(SurvivorController))
+        if (dystopicNPCs != null)
+            foreach (NPCController NPC in dystopicNPCs.GetComponentsInChildren<NPCController>())
             {
-                NPCController droppedItem = (NPC as SurvivorController).droppedItem;
-                if (droppedItem != null)
+                NPC.SetDimension(GameManager.State.DYSTOPIA);
+                NPCs.Add(NPC);
+                if (NPC.GetType() == typeof(SurvivorController))
                 {
-                    droppedItem.gameObject.SetActive(true);
-                    droppedItem.SetDimension(GameManager.State.DYSTOPIA);
-                    droppedItem.gameObject.SetActive(false);
-                    NPCs.Add(droppedItem);
+                    NPCController droppedItem = (NPC as SurvivorController).droppedItem;
+                    if (droppedItem != null)
+                    {
+                        droppedItem.gameObject.SetActive(true);
+                        droppedItem.SetDimension(GameManager.State.DYSTOPIA);
+                        droppedItem.gameObject.SetActive(false);
+                        NPCs.Add(droppedItem);
+                    }
                 }
             }
-        }
 
         SetState();
 
@@ -114,138 +119,145 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Q)) { Interact(); }
+        if (Input.GetKeyDown(KeyCode.Escape)) { gameManager.TogglePause(); }
 
 
 
-        if (!isFrozen_)
+        if (!gameManager.GetIsPaused())
         {
-            if (gameManager.GetCanSwitch())
-                if (Input.GetKeyDown(KeyCode.E))
+            if (Input.GetKeyDown(KeyCode.Q)) { Interact(); }
+
+
+
+            if (!isFrozen_)
+            {
+                if (gameManager.GetCanSwitch())
+                    if (Input.GetKeyDown(KeyCode.E))
+                    {
+                        gameManager.SwitchState();
+                        SetState();
+                    }
+
+
+
+                bool moving = false;
+                // Can not move if walled or on corner, falling (bug)
+                if (!isWalled() && !(isAired_ && contactCount_ > 0))
                 {
-                    gameManager.SwitchState();
-                    SetState();
+                    if (Input.GetKey(KeyCode.LeftArrow))
+                    { direction_ = Side.LEFT; moving = true; }
+                    else if (Input.GetKey(KeyCode.RightArrow))
+                    { direction_ = Side.RIGHT; moving = true; }
                 }
+                int dir = SideToDir(direction_);
 
 
 
-            bool moving = false;
-            // Can not move if walled or on corner, falling (bug)
-            if (!isWalled() && !(isAired_ && contactCount_ > 0))
-            {
-                if (Input.GetKey(KeyCode.LeftArrow))
-                { direction_ = Side.LEFT; moving = true; }
-                else if (Input.GetKey(KeyCode.RightArrow))
-                { direction_ = Side.RIGHT; moving = true; }
-            }
-            int dir = SideToDir(direction_);
-
-
-
-            if (isWalled())
-            {
-                if (Input.GetKeyDown(KeyCode.Space))
-                    WallJump(walledOn_);
-            }
-            else
-            {
-                if (Input.GetKeyDown(KeyCode.Space))
-                    Jump();
-
-
-
-                setRunning(moving);
-                if (moving)
+                if (isWalled())
                 {
-                    bool ok = playerRB.velocity.x == 5;
-
-                    if (isAired_)
-                        playerRB.velocity = playerRB.velocity + new Vector2(dir * airedAcceleration * Time.deltaTime, 0);
-                    else
-                        playerRB.velocity = playerRB.velocity + new Vector2(dir * groundedAcceleration * Time.deltaTime, 0);
-
-                    if (dir * playerRB.velocity.x > maxSpeed)
-                        playerRB.velocity = new Vector2(dir * maxSpeed, playerRB.velocity.y);
+                    if (Input.GetKeyDown(KeyCode.Space))
+                        WallJump(walledOn_);
                 }
-                else if (isGrounded_)
+                else
                 {
-                    playerRB.velocity = new Vector2(0, playerRB.velocity.y);
-                }
-
-                // Set flip
-                GetComponent<SpriteRenderer>().flipX = (direction_ == Side.LEFT) ? true : false;
-            }
+                    if (Input.GetKeyDown(KeyCode.Space))
+                        Jump();
 
 
 
-            // Set walled if going the right direction
-            if (isAired_ && wallAtHand_ == direction_ && wallAtFoot_ == direction_ && wallJumpTimer_ == 0)
-            {
-                if (!isWalled())
-                    WallOn(direction_);
-            }
-            else if (isWalled())
-                WallOn(Side.NONE);
+                    setRunning(moving);
+                    if (moving)
+                    {
+                        bool ok = playerRB.velocity.x == 5;
 
+                        if (isAired_)
+                            playerRB.velocity = playerRB.velocity + new Vector2(dir * airedAcceleration * Time.deltaTime, 0);
+                        else
+                            playerRB.velocity = playerRB.velocity + new Vector2(dir * groundedAcceleration * Time.deltaTime, 0);
 
-
-            // Reduce jump timer
-            if (wallJumpTimer_ > 0)
-                wallJumpTimer_ = Mathf.Max(wallJumpTimer_ - Time.deltaTime, 0);
-        }
-
-
-
-        if (!isAired_)
-            playerRB.velocity = new Vector2(playerRB.velocity.x, 0);
-
-
-
-        if (isFrozen_)
-        {
-            if (currentAnimation != AnimClip.idle)
-                Animate(AnimClip.idle);
-        }
-        else
-            // Animation
-            switch (currentAnimation)
-            {
-                case AnimClip.idle:
-                    if (isRunning_)
-                        Animate(AnimClip.running);
-                    else if (isAired_)
-                        Animate(AnimClip.jumping);
-                    break;
-
-                case AnimClip.running:
-                    if (!isRunning_)
-                        Animate(AnimClip.idle);
-                    else if (isAired_)
-                        Animate(AnimClip.jumping);
-                    break;
-
-                case AnimClip.jumping:
-                    if (isWalled())
-                        Animate(AnimClip.walled);
+                        if (dir * playerRB.velocity.x > maxSpeed)
+                            playerRB.velocity = new Vector2(dir * maxSpeed, playerRB.velocity.y);
+                    }
                     else if (isGrounded_)
                     {
+                        playerRB.velocity = new Vector2(0, playerRB.velocity.y);
+                    }
+
+                    // Set flip
+                    GetComponent<SpriteRenderer>().flipX = (direction_ == Side.LEFT) ? true : false;
+                }
+
+
+
+                // Set walled if going the right direction
+                if (isAired_ && wallAtHand_ == direction_ && wallAtFoot_ == direction_ && wallJumpTimer_ == 0)
+                {
+                    if (!isWalled())
+                        WallOn(direction_);
+                }
+                else if (isWalled())
+                    WallOn(Side.NONE);
+
+
+
+                // Reduce jump timer
+                if (wallJumpTimer_ > 0)
+                    wallJumpTimer_ = Mathf.Max(wallJumpTimer_ - Time.deltaTime, 0);
+            }
+
+
+
+            if (!isAired_)
+                playerRB.velocity = new Vector2(playerRB.velocity.x, 0);
+
+
+
+            if (isFrozen_)
+            {
+                if (currentAnimation != AnimClip.idle)
+                    Animate(AnimClip.idle);
+            }
+            else
+                // Animation
+                switch (currentAnimation)
+                {
+                    case AnimClip.idle:
                         if (isRunning_)
                             Animate(AnimClip.running);
-                        else
-                            Animate(AnimClip.idle);
-                    }
-                    break;
-
-                case AnimClip.walled:
-                    if (!isWalled())
-                    {
-                        if (isAired_)
+                        else if (isAired_)
                             Animate(AnimClip.jumping);
-                        else
+                        break;
+
+                    case AnimClip.running:
+                        if (!isRunning_)
                             Animate(AnimClip.idle);
-                    }
-                    break;
-            }
+                        else if (isAired_)
+                            Animate(AnimClip.jumping);
+                        break;
+
+                    case AnimClip.jumping:
+                        if (isWalled())
+                            Animate(AnimClip.walled);
+                        else if (isGrounded_)
+                        {
+                            if (isRunning_)
+                                Animate(AnimClip.running);
+                            else
+                                Animate(AnimClip.idle);
+                        }
+                        break;
+
+                    case AnimClip.walled:
+                        if (!isWalled())
+                        {
+                            if (isAired_)
+                                Animate(AnimClip.jumping);
+                            else
+                                Animate(AnimClip.idle);
+                        }
+                        break;
+                }
+        }
     }
 
 

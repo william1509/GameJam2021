@@ -5,11 +5,11 @@ using UnityEngine;
 public class CameraController : MonoBehaviour
 {
     // Start is called before the first frame update
-    [SerializeField] Transform objectToFollow;
+    private Transform objectToFollow;
 
     void Start()
     {
-
+        objectToFollow = GameObject.Find("Character").transform;
     }
 
     // Update is called once per frame

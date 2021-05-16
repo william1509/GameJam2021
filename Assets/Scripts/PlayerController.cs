@@ -307,10 +307,6 @@ public class PlayerController : MonoBehaviour
         transform.position = startingPosition;
     }
 
-
-
-
-
     private void Interact()
     {
         if (availableNPC_ != null)
@@ -319,8 +315,6 @@ public class PlayerController : MonoBehaviour
             availableNPC_.Interact();
         }
     }
-
-
 
     private void OnTriggerEnter2D(Collider2D collider)
     {
